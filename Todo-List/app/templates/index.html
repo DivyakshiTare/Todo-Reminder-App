@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo Reminder App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #f3f4f6;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+
+        .app-title {
+            text-align: center;
+            color: #1f2937;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .task-input {
+            flex-grow: 1;
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .date-input {
+            width: 150px;
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .add-button {
+            padding: 0.75rem 1.5rem;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        .add-button:hover {
+            background-color: #1d4ed8;
+        }
+
+        .actions-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .delete-all-button {
+            padding: 0.5rem 1rem;
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background-color 0.2s;
+        }
+
+        .delete-all-button:hover {
+            background-color: #dc2626;
+        }
+
+        .tasks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background-color: #f9fafb;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            transition: transform 0.2s ease;
+        }
+
+        .task-item:hover {
+            transform: translateX(5px);
+        }
+
+        .task-content {
+            flex-grow: 1;
+        }
+
+        .task-title {
+            font-size: 1rem;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .task-date {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .complete-button, .edit-button, .delete-button {
+            padding: 0.5rem;
+            background-color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .complete-button {
+            border: 1px solid #e5e7eb;
+            color: #9ca3af;
+        }
+
+        .complete-button.completed {
+            background-color: #34d399;
+            color: white;
+            border-color: #34d399;
+        }
+
+        .edit-button {
+            border: 1px solid #2563eb;
+            color: #2563eb;
+        }
+
+        .edit-button:hover {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .delete-button {
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+
+        .delete-button:hover {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .completed .task-title {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #6b7280;
+            padding: 2rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .cancel-button {
+            padding: 0.75rem 1.5rem;
+            background-color: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        .cancel-button:hover {
+            background-color: #4b5563;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .date-input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="app-title">Todo Reminder</h1>
+        
+        <div class="input-group">
+            <input type="text" class="task-input" placeholder="Add a new task..." id="taskInput">
+            <input type="date" class="date-input" id="dateInput">
+            <button class="add-button" id="addButton">Add Task</button>
+        </div>
+
+        <div class="actions-bar">
+            <button class="delete-all-button" id="deleteAllButton">Delete All Tasks</button>
+        </div>
+
+        <div class="tasks-list" id="tasksList">
+            <!-- Tasks will be inserted here -->
+            <div class="empty-state">No tasks yet. Add a new task to get started!</div>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h2>Edit Task</h2>
+            <input type="text" id="editTaskInput" class="task-input" placeholder="Edit task...">
+            <input type="date" id="editDateInput" class="date-input">
+            <div class="modal-buttons">
+                <button id="saveEditButton" class="add-button">Save Changes</button>
+                <button id="cancelEditButton" class="cancel-button">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TodoApp {
+            constructor() {
+                this.tasks = [];
+                this.taskInput = document.getElementById('taskInput');
+                this.dateInput = document.getElementById('dateInput');
+                this.addButton = document.getElementById('addButton');
+                this.tasksList = document.getElementById('tasksList');
+                this.deleteAllButton = document.getElementById('deleteAllButton');
+                this.editModal = document.getElementById('editModal');
+                this.editTaskInput = document.getElementById('editTaskInput');
+                this.editDateInput = document.getElementById('editDateInput');
+                this.saveEditButton = document.getElementById('saveEditButton');
+                this.cancelEditButton = document.getElementById('cancelEditButton');
+                this.currentEditingId = null;
+
+                // Set today's date as the minimum date for the date inputs
+                const today = new Date().toISOString().split('T')[0];
+                this.dateInput.min = today;
+                this.editDateInput.min = today;
+
+                // Event Listeners
+                this.addButton.addEventListener('click', () => this.addTask());
+                this.taskInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addTask();
+                });
+                this.deleteAllButton.addEventListener('click', () => this.deleteAllTasks());
+                this.saveEditButton.addEventListener('click', () => this.saveEdit());
+                this.cancelEditButton.addEventListener('click', () => this.closeEditModal());
+
+                // Close modal when clicking outside
+                window.addEventListener('click', (e) => {
+                    if (e.target === this.editModal) {
+                        this.closeEditModal();
+                    }
+                });
+
+                // Initial load
+                this.loadTasks();
+            }
+
+            // API Methods
+            async loadTasks() {
+                try {
+                    const response = await fetch('/api/tasks');
+                    if (!response.ok) throw new Error('Failed to load tasks');
+                    this.tasks = await response.json();
+                    this.renderTasks();
+                } catch (error) {
+                    this.showError('Failed to load tasks: ' + error.message);
+                }
+            }
+
+            async addTask() {
+                const title = this.taskInput.value.trim();
+                const dueDate = this.dateInput.value;
+
+                if (!title) {
+                    this.showError('Please enter a task title');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/tasks', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            title,
+                            due_date: dueDate,
+                        }),
+                    });
+
+                    if (!response.ok) throw new Error('Failed to add task');
+
+                    const task = await response.json();
+                    this.tasks.push(task);
+                    this.renderTasks();
+                    this.taskInput.value = '';
+                    this.dateInput.value = '';
+                    this.taskInput.focus();
+                } catch (error) {
+                    this.showError('Failed to add task: ' + error.message);
+                }
+            }
+
+            async toggleTask(taskId) {
+                try {
+                    const task = this.tasks.find(t => t.id === taskId);
+                    if (!task) return;
+
+                    const response = await fetch(`/api/tasks/${taskId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            completed: !task.completed,
+                        }),
+                    });
+
+                    if (!response.ok) throw new Error('Failed to update task');
+
+                    const updatedTask = await response.json();
+                    this.tasks = this.tasks.map(t => t.id === taskId ? updatedTask : t);
+                    this.renderTasks();
+                } catch (error) {
+                    this.showError('Failed to update task: ' + error.message);
+                }
+            }
+
+            editTask(taskId) {
+                const task = this.tasks.find(t => t.id === taskId);
+                if (task) {
+                    this.currentEditingId = taskId;
+                    this.editTaskInput.value = task.title;
+                    this.editDateInput.value = task.due_date || '';
+                    this.editModal.style.display = 'block';
+                    this.editTaskInput.focus();
+                }
+            }
+
+            async saveEdit() {
+                const title = this.editTaskInput.value.trim();
+                if (!title) {
+                    this.showError('Please enter a task title');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/tasks/${this.currentEditingId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            title: title,
+                            due_date: this.editDateInput.value || null,
+                        }),
+                    });
+
+                    if (!response.ok) throw new Error('Failed to update task');
+
+                    const updatedTask = await response.json();
+                    this.tasks = this.tasks.map(t => t.id === this.currentEditingId ? updatedTask : t);
+                    this.renderTasks();
+                    this.closeEditModal();
+                } catch (error) {
+                    this.showError('Failed to update task: ' + error.message);
+                }
+            }
+
+            async deleteTask(taskId) {
+                const task = this.tasks.find(t => t.id === taskId);
+                if (!task) return;
+
+                if (confirm(`Are you sure you want to delete "${task.title}"?`)) {
+                    try {
+                        const response = await fetch(`/api/tasks/${taskId}`, {
+                            method: 'DELETE',
+                        });
+
+                        if (!response.ok) throw new Error('Failed to delete task');
+
+                        this.tasks = this.tasks.filter(t => t.id !== taskId);
+                        this.renderTasks();
+                    } catch (error) {
+                        this.showError('Failed to delete task: ' + error.message);
+                    }
+                }
+            }
+
+            async deleteAllTasks() {
+                if (this.tasks.length === 0) {
+                    this.showError('No tasks to delete');
+                    return;
+                }
+
+                if (confirm('Are you sure you want to delete all tasks? This action cannot be undone.')) {
+                    try {
+                        const response = await fetch('/api/tasks/clear', {
+                            method: 'DELETE',
+                        });
+
+                        if (!response.ok) throw new Error('Failed to delete all tasks');
+
+                        this.tasks = [];
+                        this.renderTasks();
+                    } catch (error) {
+                        this.showError('Failed to delete all tasks: ' + error.message);
+                    }
+                }
+            }
+
+            closeEditModal() {
+                this.editModal.style.display = 'none';
+                this.currentEditingId = null;
+                this.editTaskInput.value = '';
+                this.editDateInput.value = '';
+            }
+
+            renderTasks() {
+                if (this.tasks.length === 0) {
+                    this.tasksList.innerHTML = `
+                        <div class="empty-state">No tasks yet. Add a new task to get started!</div>
+                    `;
+                    return;
+                }
+
+                this.tasksList.innerHTML = this.tasks
+                    .sort((a, b) => {
+                        if (a.completed !== b.completed) {
+                            return a.completed ? 1 : -1;
+                        }
+                        if (a.due_date && b.due_date) {
+                            return new Date(a.due_date) - new Date(b.due_date);
+                        }
+                        return new Date(a.created_at) - new Date(b.created_at);
+                    })
+                    .map(task => `
+                        <div class="task-item ${task.completed ? 'completed' : ''}" data-id="${task.id}">
+                            <button class="complete-button ${task.completed ? 'completed' : ''}" 
+                                    onclick="todoApp.toggleTask(${task.id})" 
+                                    title="${task.completed ? 'Mark as incomplete' : 'Mark as complete'}">
+                                ✓
+                            </button>
+                            <div class="task-content">
+                                <div class="task-title">${this.escapeHtml(task.title)}</div>
+                                ${task.due_date ? `
+                                    <div class="task-date">Due: ${new Date(task.due_date).toLocaleDateString()}</div>
+                                ` : ''}
+                            </div>
+                            <button class="edit-button" 
+                                    onclick="todoApp.editTask(${task.id})" 
+                                    title="Edit task">
+                                ✎
+                            </button>
+                            <button class="delete-button" 
+                                    onclick="todoApp.deleteTask(${task.id})" 
+                                    title="Delete task">
+                                ×
+                            </button>
+                        </div>
+                    `).join('');
+            }
+
+            showError(message) {
+                alert(message);
+            }
+
+            escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+        }
+
+        // Initialize the app
+        const todoApp = new TodoApp();
+    </script>
+</body>
+</html>
